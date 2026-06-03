@@ -22,7 +22,7 @@ class DeltaMaxSAT:
     #       if var_assignment[i] = -k < 0 then x_k = False
     #       This is to be consistent with the PySAT notation
     #
-    # if no solution is found (all clauses unsolvable or none satisfying the delta-bound) will return (None, None, None)
+    # if no solution is found (all clauses unsolvable or none satisfying the delta-bound) will return (0, None, None)
     def solve(self):
         # solvability check: is there at least one solvable clause?
         # if not, don't bother going through the recursion
@@ -42,27 +42,40 @@ class DeltaMaxSAT:
 
 
     # helper function for solve()
+    # Given:
+    #   max_num_clauses: Int
+    #
+    # determines if there is a solution where max_num_clauses of clauses are satisfied
+    # if not, then recursively determines if max_num_clauses - 1 clausea are satisfied
+    # will return (0, None, None) if no solution is found
     def _solve(self, max_num_clauses, clauses):
         if max_num_clauses == 0:
-            return (None, None, None)
+            return (0, None, None)
 
         cnf = CNF(from_clauses=clauses)
         with Solver(bootstrap_with=cnf) as solver:
-            # TODO: THIS SECTION HAS BIG BUGS!!!
-            # RECURSION NOT CORRECTLY IMPLEMENTED
             status = solver.solve()
             permutations = [clauses[:i] + clauses[i+1:] for i in range(len(clauses))] # all possible combinations with one element removed
-            if not status: # current num clauses invalid, try one less
-                for _cnf in permutations:
-                    return self._solve(max_num_clauses - 1, _cnf)
-
             inBound = float(max_num_clauses) / float(len(self.phi)) >= 1.0 - self.delta
-            if not inBound: # current num clauses invalid, try one less
-                for _cnf in permutations:
-                    return self._solve(max_num_clauses - 1, _cnf)
+            if status and inBound: # CNF is solvable and in-bound
+                return (max_num_clauses, clauses, solver.get_model())
 
-            # CNF is solvable and in-bound
-            return (max_num_clauses, clauses, solver.get_model())
+            # else invalid, try again with less clauses
+            solved_subcnf_arr = len(permutations) * [(None, None, None)]
+            for i, _cnf in enumerate(permutations):
+                solved_subcnf_arr[i] = self._solve(max_number_clauses - 1, _cnf)
+
+            max_sol = (0, None, None)
+            for sol_tuple in solved_subcnf_arr:
+                if sol_tuple[0] is None:
+                    continue
+                if sol_tuple[0] > max_sol[0]:
+                    max_sol = sol_tuple
+
+            if max_sol[0] == 0:
+                return (0, None, None)
+            return max_sol
+
 
 
 
