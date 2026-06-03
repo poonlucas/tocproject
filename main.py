@@ -22,32 +22,52 @@ from pysat.solvers import Solver
 #   cnf: CNF solver from PySAT
 #   phi: boolean formula
 #       phi[k] = Clause k
-#   phi[k][0..2] = 3 Variables in Clause k
+#       phi[k][0..2] = 3 Variables in Clause k
 class DeltaMaxSAT:
-    def __init__(self, delta, phi):
+    MAX_CLAUSES_PER_CNF = 5
+
+    def __init__(self, delta=0.125, phi):
         self.delta = delta
         self.cnf = CNF(from_clauses=phi)
         self.phi = phi
 
-    # returns True if solvable, False otherwise
+    # returns a tuple (max_num_clauses, clauses, var_assignment)
+    #   max_num_clauses: Int; the maximum number of clauses solvable such that
+    #           |C [solved]| / |C [total]| >= 1 - delta
+    #   clauses: List[List[Int]; clauses[i] = C_i = ith clause
+    #   var_assignment: List[Int];
+    #       if var_assignment[i] = k > 0 then x_k = True
+    #       if var_assignment[i] = -k < 0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 then x_k = False
+    #       This is to be consistent with the PySAT notation
+    #
+    # if no solution is found (all clauses unsolvable), will return (None, None, None)
     def solve(self):
-        with Solver(bootstrap_with=self.cnf) as solver:
-            return True if solver.solve() else False
+        # solvability check: is there at least one solvable clause?
+        # if not, don't bother going through the recursion
+        quick_check_passed = False
+        for clause in phi:
+            cnf = CNF(from_clauses=[clause])
+            with Solver(bootstrap_with=cnf) as solver:
+                if solver.solve():
+                    quick_check_passed = True
+                    break
+        # not a single satisfiable clause
+        if not quick_check_passed:
+            return (None, None, None)
+
+        return _solve(max_num_clauses=MAX_NUM_CLAUSES_PER_CNF, clauses=phi, var_assignment=None)
 
 
 
+    # helper function for solve()
+    def _solve(max_num_clauses, clauses, var_assignment):
+        ...
 
 
 
 
 if __name__ == '__main__':
-    phi = [[1], [-1]]
-    dms = DeltaMaxSAT(delta=0.125, phi=phi)
-    status = dms.solve()
-    if status:
-        print('Solvable')
-    else:
-        print('Unsolvable')
+    print('main() is empty right now :(')
 
 
 
