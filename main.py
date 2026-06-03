@@ -1,5 +1,6 @@
 from pysat.formula import CNF
 from pysat.solvers import Solver
+import numpy as np
 
 # class to solve a delta-3-MAX-SAT
 #   cnf: CNF solver from PySAT
@@ -75,7 +76,34 @@ class DeltaMaxSAT:
             if max_sol[0] == 0:
                 return (0, None, None)
             return max_sol
+# ============== END OF CLASS DeltaMaxSAT =========================
 
+
+
+
+class TestDeltaMaxSAT:
+    def __init__(self, max_num_clauses, num_test_cnf, num_variables, seed=None):
+        self.max_num_clauses = max_num_clauses
+        self.num_test_cnf = num_test_cnf
+        self.num_variables = num_variables
+        self.seed = seed
+
+    # start creating and running test cases
+    #   creates random 3-CNF formulas with at most 'max_num_clauses' clauses
+    #   will create 'num_test_cnf' test cases (one 3-CNF instance being a single test case)
+    def run(self):
+        ...
+
+    # create a 3-CNF
+    def _createCNF(self):
+        cnf = self.max_num_clauses * [0]
+        # ex: num_variables = 3
+        # --> var_choices = [-3, -2, -1, 1, 2, 3]
+        # the pop serves to remove the element '0' which is in var_choices upon creation
+        var_choices = [x for x in range(-self.num_variables, self.num_variables + 1)].pop(self.num_variables)
+        for i in range(self.max_num_clauses):
+            # 3-CNF calls for 3 variables per clause, thus n=3
+            cnf[i] = np.random.choice(var_choices, n=3, replace=False)
 
 
 
