@@ -19,7 +19,7 @@ class DeltaMaxSAT:
     #   clauses: List[List[Int]; clauses[i] = C_i = ith clause
     #   var_assignment: List[Int];
     #       if var_assignment[i] = k > 0 then x_k = True
-    #       if var_assignment[i] = -k < 0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 then x_k = False
+    #       if var_assignment[i] = -k < 0 then x_k = False
     #       This is to be consistent with the PySAT notation
     #
     # if no solution is found (all clauses unsolvable or none satisfying the delta-bound) will return (None, None, None)
