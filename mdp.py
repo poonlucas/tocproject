@@ -8,9 +8,8 @@ import graphviz
 def check_clause(clause, assignment):
     for literal in clause:
         if (literal > 0 and assignment[abs(literal) - 1] == 1) or (literal < 0 and assignment[abs(literal) - 1] == 0):
-            continue
-        return False
-    return True
+            return True
+    return False
 
 
 class MDP:
