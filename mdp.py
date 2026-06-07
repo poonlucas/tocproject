@@ -13,13 +13,14 @@ def check_clause(clause, assignment):
 
 
 class MDP:
-    def __init__(self, phi, num_variables: int, num_clauses: int, solution):
+    def __init__(self, phi, num_variables: int, num_clauses: int, solution, delta):
         self.phi = phi
         self.horizon = num_variables + 1
         self.num_clauses = num_clauses
         self.solution = [-1] * num_variables
         for v in solution:
             self.solution[abs(v) - 1] = 1 if v > 0 else 0
+        self.delta = delta
 
         self.states = []
         for h in range(1, self.horizon + 1):
@@ -27,6 +28,10 @@ class MDP:
             unassigned = -np.ones((2 ** (h-1), num_variables - (h-1)), dtype=int)
             states_h = np.concatenate((assigned, unassigned), axis=1)
             self.states.append(states_h)
+
+        max_reward = max([self.reward(state) for state in self.states[-1]])
+        sol_reward = self.reward(self.solution)
+        print(f"Gap: {max_reward - sol_reward}, epsilon-optimal: {max_reward - sol_reward <= (self.delta / 2)}")
 
     def reward(self, assignment):
         correct_clauses = [check_clause(clause, assignment) for clause in self.phi]
@@ -53,5 +58,5 @@ class MDP:
 
 
 if __name__ == '__main__':
-    mdp = MDP([[-1, 2, -3], [1, 2, 4]], 4, 2, [-1, 2, 3, 4])
+    mdp = MDP([[-1, 2, -3], [1, 2, 4]], 4, 2, [-1, 2, 3, 4], 0.8)
     mdp.visualize()
