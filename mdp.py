@@ -5,12 +5,22 @@ import numpy as np
 import graphviz
 
 
+def check_clause(clause, assignment):
+    for literal in clause:
+        if (literal > 0 and assignment[abs(literal) - 1] == 1) or (literal < 0 and assignment[abs(literal) - 1] == 0):
+            continue
+        return False
+    return True
+
+
 class MDP:
     def __init__(self, phi, num_variables: int, num_clauses: int, solution):
         self.phi = phi
         self.horizon = num_variables + 1
         self.num_clauses = num_clauses
-        self.solution = solution
+        self.solution = [-1] * num_variables
+        for v in solution:
+            self.solution[abs(v) - 1] = 1 if v > 0 else 0
 
         self.states = []
         for h in range(1, self.horizon + 1):
@@ -20,9 +30,8 @@ class MDP:
             self.states.append(states_h)
 
     def reward(self, assignment):
-        # check number of satisfied clauses
-        correct_clauses = 1
-        return correct_clauses / self.num_clauses
+        correct_clauses = [check_clause(clause, assignment) for clause in self.phi]
+        return correct_clauses.count(True) / self.num_clauses
 
     def visualize(self):
         graph = graphviz.Digraph(comment='MDP')
@@ -45,5 +54,5 @@ class MDP:
 
 
 if __name__ == '__main__':
-    mdp = MDP(-1, 3, 3, [0, 1, 1])
+    mdp = MDP([[-1, 2, -3], [1, 2, 4]], 4, 2, [-1, 2, 3, 4])
     mdp.visualize()
