@@ -5,7 +5,7 @@ from pysat.solvers import Solver
 import numpy as np
 import mdp
 
-# class to solve a delta-3-MAX-SAT
+# class to solve a delta-MAX-SAT
 #   cnf: CNF solver from PySAT
 #   phi: boolean formula
 #       phi[k] = Clause k
@@ -84,7 +84,7 @@ class DeltaMaxSAT:
             # else invalid, try again with less clauses
             solved_subcnf_arr = len(permutations) * [(None, None, None)]
             for i, _cnf in enumerate(permutations):
-                solved_subcnf_arr[i] = self._solve(max_number_clauses - 1, _cnf)
+                solved_subcnf_arr[i] = self._solve(max_num_clauses - 1, _cnf)
 
             max_sol = (0, None, None)
             for sol_tuple in solved_subcnf_arr:
@@ -100,15 +100,15 @@ class DeltaMaxSAT:
 
 if __name__ == '__main__':
     # change seed to None if you want unpredictable seeds to be passed into MDP
-    SEED = 0
+    SEED = 10
     NUM_TESTS = 1
-    MAX_NUM_CLAUSES = 10
+    MAX_NUM_CLAUSES = 5
     HORIZON = 5
 
     np.random.seed(SEED)
 
     for _ in range(NUM_TESTS):
-        _mdp = mdp.MDP(horizon=HORIZON, max_preferences=HORIZON)
+        _mdp = mdp.MDP(horizon=HORIZON, max_preferences=MAX_NUM_CLAUSES)
         all_prefs = _mdp.preferences
         print('preferences:', all_prefs)
 

@@ -7,7 +7,7 @@ import graphviz
 
 def check_preference(preference, assignment):
     for action in preference:
-        if (action > 0 and assignment[abs(action) - 1] == 1) or (action < 0 and assignment[abs(action) - 1] == 0):
+        if not (action > 0 and assignment[abs(action) - 1] == 1) and not (action < 0 and assignment[abs(action) - 1] == 0):
             return False
     return True
 
@@ -30,7 +30,7 @@ class MDP:
         preferences = [[]] * self.max_preferences
         var_choices = [x for x in range(-(self.horizon - 1), self.horizon)]
         var_choices.pop(self.horizon - 1)
-        for i in range(self.horizon - 1):
+        for i in range(self.max_preferences):
             R = np.random.randint(1, self.horizon)
             preferences[i] = np.random.choice(var_choices, size=R, replace=False)
         return preferences
