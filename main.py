@@ -13,8 +13,7 @@ class DeltaMaxSAT:
         self.MAX_NUM_CLAUSES_PER_CNF = max_num_clauses
         self.delta = delta
         self.phi = phi
-        self.cnf = CNF(from_clauses=self.phi)
-        self.assignment = self.solve(debug)
+        self.solution = self.solve(debug=debug)
 
     # returns a tuple (max_num_clauses, clauses, var_assignment)
     #   max_num_clauses: Int; the maximum number of clauses solvable such that
@@ -34,7 +33,8 @@ class DeltaMaxSAT:
             print('beginning quick check')
             print('phi:', self.phi)
         for clause in self.phi:
-            print('checking clause:', clause)
+            if debug:
+                print('checking clause:', clause)
             cnf = [clause]
             if debug:
                 print('cnf:', cnf)
@@ -52,7 +52,7 @@ class DeltaMaxSAT:
                 print('quick check failed')
             return (0, None, None)
 
-        return self._solve(max_num_clauses=min(self.MAX_NUM_CLAUSES_PER_CNF, len(self.phi)), clauses=self.phi)
+        return self._solve(max_num_clauses=min(self.MAX_NUM_CLAUSES_PER_CNF, len(self.phi)), clauses=self.phi, debug=debug)
 
 
 
@@ -63,7 +63,7 @@ class DeltaMaxSAT:
     # determines if there is a solution where max_num_clauses of clauses are satisfied
     # if not, then recursively determines if max_num_clauses - 1 clausea are satisfied
     # will return (0, None, None) if no solution is found
-    def _solve(self, max_num_clauses, clauses):
+    def _solve(self, max_num_clauses, clauses, debug=False):
         if debug:
             print('entered helper function')
         if max_num_clauses == 0:
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     for _ in range(NUM_TESTS):
         _mdp = mdp.MDP(horizon=HORIZON, max_preferences=HORIZON)
         all_prefs = _mdp.preferences
-        print(all_prefs)
+        print('preferences:', all_prefs)
 
         # generate a CNF from the given preferences
         #   maybe a list comprehension would be better here? idk tho
@@ -118,15 +118,16 @@ if __name__ == '__main__':
         for pref in all_prefs:
             if len(pref) == 0:
                 continue
-            cnf.append([-x for x in pref])
-        print(cnf)
+            cnf.append([int(-x) for x in pref])
+        print('phi:', cnf)
 
         # solve the formed CNF
         # delta=1: convert DeltaMaxSAT to just MaxSAT
-        dms = DeltaMaxSAT(phi=cnf, delta=1, max_num_clauses=MAX_NUM_CLAUSES, debug=True)
-        print(dms.assignment)
+        dms = DeltaMaxSAT(phi=cnf, delta=1, max_num_clauses=MAX_NUM_CLAUSES)
+        print('solution:', dms.solution)
 
-
+        #
+        _mdp.visualize(dms.solution[2])
 
 
 
