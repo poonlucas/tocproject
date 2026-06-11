@@ -1,3 +1,5 @@
+import pdb
+
 from pysat.formula import CNF
 from pysat.solvers import Solver
 import numpy as np
@@ -126,8 +128,10 @@ if __name__ == '__main__':
         dms = DeltaMaxSAT(phi=cnf, delta=1, max_num_clauses=MAX_NUM_CLAUSES)
         print('solution:', dms.solution)
 
-        #
-        _mdp.visualize(dms.solution[2])
+        solution = [i for i in range(1, HORIZON)]
+        for a in dms.solution[2]:
+            solution[abs(a) - 1] = a
+        _mdp.visualize(solution)
 
 
 

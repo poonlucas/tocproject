@@ -41,6 +41,7 @@ class MDP:
         return 1 - violated_preferences.count(True) / len(self.preferences)
 
     def visualize(self, solution):
+        solution = [0 if a < 0 else 1 for a in solution]
         graph = graphviz.Digraph(comment='MDP')
         graph.attr(rankdir='LR')
         for h, state_h in enumerate(self.states):
