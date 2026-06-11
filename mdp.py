@@ -13,8 +13,7 @@ def check_preference(preference, assignment):
 
 
 class MDP:
-    def __init__(self, horizon: int = 5, max_preferences: int = 10, seed: int = 0):
-        np.random.seed(seed)
+    def __init__(self, horizon: int = 5, max_preferences: int = 10):
         self.max_preferences = max_preferences
         self.horizon = horizon
 
