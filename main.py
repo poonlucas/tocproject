@@ -1,4 +1,6 @@
 import pdb
+import time
+import matplotlib.pyplot as plt
 
 from pysat.formula import CNF
 from pysat.solvers import Solver
@@ -101,39 +103,69 @@ class DeltaMaxSAT:
 if __name__ == '__main__':
     # change seed to None if you want unpredictable seeds to be passed into MDP
     SEED = 10
-    NUM_TESTS = 1
+    NUM_TESTS = 5 # how many different MDPs per test run
     MAX_NUM_CLAUSES = 5
     HORIZON = 5
+    NUM_RUNS = 3 # how many test runs: each run has different parameter settings
 
     np.random.seed(SEED)
 
-    for _ in range(NUM_TESTS):
-        _mdp = mdp.MDP(horizon=HORIZON, max_preferences=MAX_NUM_CLAUSES)
-        all_prefs = _mdp.preferences
-        print('preferences:', all_prefs)
+    test_times = NUM_RUNS * [NUM_TESTS * [0]]
 
-        # generate a CNF from the given preferences
-        #   maybe a list comprehension would be better here? idk tho
-        #cnf = list(map(lambda arr: list(map(lambda x: -x, arr)), all_prefs))
-        # remove extra empty arrays since they can mess up the PySAT solver
-        cnf = []
-        for pref in all_prefs:
-            if len(pref) == 0:
-                continue
-            cnf.append([int(-x) for x in pref])
-        print('phi:', cnf)
+    # run vars: each list should have length == NUM_RUNS
+    run_horizons = [3, 4, 5]
+    run_max_num_clauses = [7, 8, 9]
+    for run_num in range(NUM_RUNS):
+        print(f'\n\n===============STARTING TEST RUN {run_num + 1} of {NUM_RUNS}=======================')
+        HORIZON = run_horizons[run_num]
+        MAX_NUM_CLAUSES = run_max_num_clauses[run_num]
+        for i in range(NUM_TESTS):
+            start_time = time.perf_counter()
+            _mdp = mdp.MDP(horizon=HORIZON, max_preferences=MAX_NUM_CLAUSES)
+            all_prefs = _mdp.preferences
+            #print('preferences:', all_prefs)
 
-        # solve the formed CNF
-        # delta=1: convert DeltaMaxSAT to just MaxSAT
-        dms = DeltaMaxSAT(phi=cnf, delta=1, max_num_clauses=MAX_NUM_CLAUSES)
-        print('solution:', dms.solution)
+            # generate a CNF from the given preferences
+            #   maybe a list comprehension would be better here? idk tho
+            #cnf = list(map(lambda arr: list(map(lambda x: -x, arr)), all_prefs))
+            # remove extra empty arrays since they can mess up the PySAT solver
+            cnf = []
+            for pref in all_prefs:
+                if len(pref) == 0:
+                    continue
+                cnf.append([int(-x) for x in pref])
+            #print('phi:', cnf)
 
-        solution = [i for i in range(1, HORIZON)]
-        for a in dms.solution[2]:
-            solution[abs(a) - 1] = a
-        _mdp.visualize(solution)
+            # solve the formed CNF
+            # delta=1: convert DeltaMaxSAT to just MaxSAT
+            dms = DeltaMaxSAT(phi=cnf, delta=1, max_num_clauses=MAX_NUM_CLAUSES)
+            #print('solution:', dms.solution)
 
+            solution = [i for i in range(1, HORIZON)]
+            for a in dms.solution[2]:
+                solution[abs(a) - 1] = a
+            #_mdp.visualize(solution)
+            end_time = time.perf_counter()
+            test_times[run_num][i] = end_time - start_time
+            print(f'\tcomplete trial {i + 1} of {NUM_TESTS}')
 
+    # end of all tests, plot test times
+    print(test_times)
+    run_params = [(run_horizons[i], run_max_num_clauses[i]) for i in range(NUM_RUNS)]
+    test_avgs = [np.average(test_times[i]) for i in range(NUM_RUNS)]
+    test_stddev = [np.std(test_times[i]) for i in range(NUM_RUNS)]
+    print(test_avgs)
+    print(test_stddev)
 
+    plt.figure(figsize=(8,4))
+    plt.plot(run_params, test_avgs, label='what does this do?', color='blue', linewidth=2)
 
+    plt.xlabel('Horizon, Max number of clauses')
+    plt.ylabel('Elapsed Time')
+    plt.title('Elapsed Time for MDP to SAT Reduction with Varying Horizon and Clauses')
+
+    plt.grid(True, linestyle='-', alpha=0.6)
+    plt.legend()
+
+    plt.show()
 
