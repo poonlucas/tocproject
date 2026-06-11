@@ -9,11 +9,12 @@ import mdp
 #       phi[k] = Clause k
 #       phi[k][0..2] = 3 Variables in Clause k
 class DeltaMaxSAT:
-    def __init__(self, phi, delta=0.125, max_num_clauses=5):
+    def __init__(self, phi, delta=0.125, max_num_clauses=5, debug=False):
         self.MAX_NUM_CLAUSES_PER_CNF = max_num_clauses
         self.delta = delta
         self.phi = phi
         self.cnf = CNF(from_clauses=self.phi)
+        self.assignment = self.solve(debug)
 
     # returns a tuple (max_num_clauses, clauses, var_assignment)
     #   max_num_clauses: Int; the maximum number of clauses solvable such that
@@ -25,19 +26,31 @@ class DeltaMaxSAT:
     #       This is to be consistent with the PySAT notation
     #
     # if no solution is found (all clauses unsolvable or none satisfying the delta-bound) will return (0, None, None)
-    def solve(self):
+    def solve(self, debug=False):
         # solvability check: is there at least one solvable clause?
         # if not, don't bother going through the recursion
         quick_check_passed = False
+        if debug:
+            print('beginning quick check')
+            print('phi:', self.phi)
         for clause in self.phi:
-            cnf = CNF(from_clauses=[clause])
+            print('checking clause:', clause)
+            cnf = [clause]
+            if debug:
+                print('cnf:', cnf)
             with Solver(bootstrap_with=cnf) as solver:
+                if debug:
+                    print('inside solver')
                 if solver.solve():
+                    if debug:
+                        print('quick check passed')
                     quick_check_passed = True
                     break
         # not a single satisfiable clause
         if not quick_check_passed:
-            return (None, None, None)
+            if debug:
+                print('quick check failed')
+            return (0, None, None)
 
         return self._solve(max_num_clauses=min(self.MAX_NUM_CLAUSES_PER_CNF, len(self.phi)), clauses=self.phi)
 
@@ -51,7 +64,11 @@ class DeltaMaxSAT:
     # if not, then recursively determines if max_num_clauses - 1 clausea are satisfied
     # will return (0, None, None) if no solution is found
     def _solve(self, max_num_clauses, clauses):
+        if debug:
+            print('entered helper function')
         if max_num_clauses == 0:
+            if debug:
+                print('no clauses: return (0, None, None)')
             return (0, None, None)
 
         cnf = CNF(from_clauses=clauses)
@@ -79,57 +96,39 @@ class DeltaMaxSAT:
             return max_sol
 # ============== END OF CLASS DeltaMaxSAT =========================
 
-
-
-
-class TestDeltaMaxSAT:
-    def __init__(self, num_test_cnf, max_num_clauses=5, max_num_vars=10, seed=None):
-        self.max_num_clauses = max_num_clauses
-        self.num_test_cnf = num_test_cnf
-        self.max_num_vars = max_num_vars
-        self.seed = seed
-
-    # start creating and running test cases
-    #   creates random 3-CNF formulas with at most 'max_num_clauses' clauses
-    #   will create 'num_test_cnf' test cases (one 3-CNF instance being a single test case)
-    def run(self):
-        ...
-
-    # create a CNF with at most self.max_num_vars variables per clause and self.max_num_clauses clauses per boolean formula
-    def _createCNF(self, debug=False):
-        np.random.seed(self.seed)
-        cnf = self.max_num_clauses * [0]
-        # ex: num_variables = 3
-        # --> var_choices = [-3, -2, -1, 1, 2, 3]
-        # the pop serves to remove the element '0' which is in var_choices upon creation
-        var_choices = [x for x in range(-self.max_num_vars, self.max_num_vars + 1)]
-        var_choices.pop(self.max_num_vars)
-        if debug:
-            print(f'var_choices = {var_choices}')
-        for i in range(self.max_num_clauses):
-            # CNF calls for R <= self.max_num_vars random variables per clause
-            R = np.random.randint(1, self.max_num_vars + 1)
-            cnf[i] = np.random.choice(var_choices, size=R, replace=False)
-
-        if debug:
-            print('cnf =')
-            for clause in cnf:
-                print(clause)
-
-
-    def print(self):
-        print('max_num_vars =', self.max_num_vars)
-        print('max_num_clauses =', self.max_num_clauses)
-        print('num_test_cnf =', self.num_test_cnf)
-        print('seed =', self.seed)
-# end of class TestDeltaMaxSAT ========================
-
-
-
 if __name__ == '__main__':
-    print('main() is empty right now :(')
-    print('testing TestDeltaMaxSAT')
-    tdms = TestDeltaMaxSAT(num_test_cnf=5)
-    tdms.print()
-    tdms._createCNF(debug=True)
+    # change seed to None if you want unpredictable seeds to be passed into MDP
+    SEED = 0
+    NUM_TESTS = 1
+    MAX_NUM_CLAUSES = 10
+    HORIZON = 5
+
+    np.random.seed(SEED)
+
+    for _ in range(NUM_TESTS):
+        _mdp = mdp.MDP(horizon=HORIZON, max_preferences=HORIZON)
+        all_prefs = _mdp.preferences
+        print(all_prefs)
+
+        # generate a CNF from the given preferences
+        #   maybe a list comprehension would be better here? idk tho
+        #cnf = list(map(lambda arr: list(map(lambda x: -x, arr)), all_prefs))
+        # remove extra empty arrays since they can mess up the PySAT solver
+        cnf = []
+        for pref in all_prefs:
+            if len(pref) == 0:
+                continue
+            cnf.append([-x for x in pref])
+        print(cnf)
+
+        # solve the formed CNF
+        # delta=1: convert DeltaMaxSAT to just MaxSAT
+        dms = DeltaMaxSAT(phi=cnf, delta=1, max_num_clauses=MAX_NUM_CLAUSES, debug=True)
+        print(dms.assignment)
+
+
+
+
+
+
 
