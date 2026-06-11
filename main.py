@@ -102,19 +102,19 @@ class DeltaMaxSAT:
 
 if __name__ == '__main__':
     # change seed to None if you want unpredictable seeds to be passed into MDP
-    SEED = 10
+    SEED = 15
     NUM_TESTS = 5 # how many different MDPs per test run
     MAX_NUM_CLAUSES = 5
     HORIZON = 5
-    NUM_RUNS = 3 # how many test runs: each run has different parameter settings
+    NUM_RUNS = 4  # how many test runs: each run has different parameter settings
 
     np.random.seed(SEED)
 
-    test_times = NUM_RUNS * [NUM_TESTS * [0]]
+    test_times = [[0.0 for _ in range(NUM_TESTS)] for _ in range(NUM_TESTS)]
 
     # run vars: each list should have length == NUM_RUNS
-    run_horizons = [3, 4, 5]
-    run_max_num_clauses = [7, 8, 9]
+    run_horizons = [10, 15, 20, 25]
+    run_max_num_clauses = [5, 5, 5, 5]
     for run_num in range(NUM_RUNS):
         print(f'\n\n===============STARTING TEST RUN {run_num + 1} of {NUM_RUNS}=======================')
         HORIZON = run_horizons[run_num]
@@ -151,18 +151,21 @@ if __name__ == '__main__':
 
     # end of all tests, plot test times
     print(test_times)
-    run_params = [(run_horizons[i], run_max_num_clauses[i]) for i in range(NUM_RUNS)]
-    test_avgs = [np.average(test_times[i]) for i in range(NUM_RUNS)]
-    test_stddev = [np.std(test_times[i]) for i in range(NUM_RUNS)]
+    # run_params = [(run_horizons[i], run_max_num_clauses[i]) for i in range(NUM_RUNS)]
+    run_params = run_horizons
+    test_avgs = [(np.average(test_times[i])) for i in range(NUM_RUNS)]
+    test_stddev = [(np.std(test_times[i])) for i in range(NUM_RUNS)]
     print(test_avgs)
     print(test_stddev)
 
-    plt.figure(figsize=(8,4))
-    plt.plot(run_params, test_avgs, label='what does this do?', color='blue', linewidth=2)
+    plt.figure(figsize=(8, 4))
+    pdb.set_trace()
+    # plt.plot(run_params, test_avgs, label='what does this do?', color='blue', linewidth=2)
+    plt.plot(run_params, test_avgs)
 
-    plt.xlabel('Horizon, Max number of clauses')
-    plt.ylabel('Elapsed Time')
-    plt.title('Elapsed Time for MDP to SAT Reduction with Varying Horizon and Clauses')
+    plt.xlabel('Horizon')
+    plt.ylabel('Elapsed Time (seconds)')
+    plt.title('Elapsed Time for MDP to SAT Reduction with Varying Horizons')
 
     plt.grid(True, linestyle='-', alpha=0.6)
     plt.legend()
