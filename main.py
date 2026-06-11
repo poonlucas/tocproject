@@ -1,6 +1,7 @@
 from pysat.formula import CNF
 from pysat.solvers import Solver
 import numpy as np
+import mdp
 
 # class to solve a delta-3-MAX-SAT
 #   cnf: CNF solver from PySAT
@@ -82,10 +83,10 @@ class DeltaMaxSAT:
 
 
 class TestDeltaMaxSAT:
-    def __init__(self, max_num_clauses, num_test_cnf, num_variables, seed=None):
+    def __init__(self, num_test_cnf, max_num_clauses=5, max_num_vars=10, seed=None):
         self.max_num_clauses = max_num_clauses
         self.num_test_cnf = num_test_cnf
-        self.num_variables = num_variables
+        self.max_num_vars = max_num_vars
         self.seed = seed
 
     # start creating and running test cases
@@ -94,24 +95,41 @@ class TestDeltaMaxSAT:
     def run(self):
         ...
 
-    # create a 3-CNF
-    def _createCNF(self):
+    # create a CNF with at most self.max_num_vars variables per clause and self.max_num_clauses clauses per boolean formula
+    def _createCNF(self, debug=False):
+        np.random.seed(self.seed)
         cnf = self.max_num_clauses * [0]
         # ex: num_variables = 3
         # --> var_choices = [-3, -2, -1, 1, 2, 3]
         # the pop serves to remove the element '0' which is in var_choices upon creation
-        var_choices = [x for x in range(-self.num_variables, self.num_variables + 1)].pop(self.num_variables)
+        var_choices = [x for x in range(-self.max_num_vars, self.max_num_vars + 1)]
+        var_choices.pop(self.max_num_vars)
+        if debug:
+            print(f'var_choices = {var_choices}')
         for i in range(self.max_num_clauses):
-            # 3-CNF calls for 3 variables per clause, thus n=3
-            cnf[i] = np.random.choice(var_choices, n=3, replace=False)
+            # CNF calls for R <= self.max_num_vars random variables per clause
+            R = np.random.randint(1, self.max_num_vars + 1)
+            cnf[i] = np.random.choice(var_choices, size=R, replace=False)
 
+        if debug:
+            print('cnf =')
+            for clause in cnf:
+                print(clause)
+
+
+    def print(self):
+        print('max_num_vars =', self.max_num_vars)
+        print('max_num_clauses =', self.max_num_clauses)
+        print('num_test_cnf =', self.num_test_cnf)
+        print('seed =', self.seed)
+# end of class TestDeltaMaxSAT ========================
 
 
 
 if __name__ == '__main__':
     print('main() is empty right now :(')
-
-
-
-
+    print('testing TestDeltaMaxSAT')
+    tdms = TestDeltaMaxSAT(num_test_cnf=5)
+    tdms.print()
+    tdms._createCNF(debug=True)
 
